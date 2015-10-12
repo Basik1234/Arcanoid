@@ -204,7 +204,7 @@ void CarcanoidDlg::ball()
 	CClientDC DC(this);
 	CRect rect;
 	CPen pn;
-	pn.CreatePen(0, 10, RGB(255, 255, 255));
+	pn.CreatePen(0, 1, RGB(255, 255, 255));
 	DC.SelectObject(pn);
 	GetClientRect(&rect);
 	int x = rect.Width()/2;
@@ -263,7 +263,7 @@ void CarcanoidDlg::ball()
 	dc.CreateCompatibleDC(pDC);
 	dc.SelectObject(&bmp);
 	pDC->BitBlt(tchka.x + timer*cos(3.14*alf / 180.0), tchka.y + timer*sin(3.14*alf / 180.0), 12, 12, &dc, 0, 0, SRCCOPY);
-	timer+=2;
+	timer+=1;
 	
 
 }
