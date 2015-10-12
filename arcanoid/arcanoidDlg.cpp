@@ -54,6 +54,18 @@ CarcanoidDlg::CarcanoidDlg(CWnd* pParent /*=NULL*/)
 {
 	crd.x = 0;
 	crd.y = 0;
+	first = new Enemy;
+	for (int i = 0; i < countEnemy/2; i++)
+	{
+		for (int y = 50; y <= countEnemy / 5 * 50; y += 50)
+		{
+			Enemy * second = new Enemy;
+			second->coord.x = i*dlinaEnemy + i * 5 + 50;
+			second->coord.y = y;
+			second->next = first;
+			first = second;
+		}
+	}
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -134,6 +146,7 @@ void CarcanoidDlg::OnPaint()
 		GetClientRect(&rect);
 		int x = rect.Width();
 		int y = rect.Height();
+		printEnemy();
 		
 }
 
@@ -196,54 +209,52 @@ void CarcanoidDlg::ball()
 	GetClientRect(&rect);
 	int x = rect.Width()/2;
 	int y = rect.Height()/2;
-	SetTimer(1, 3, 0);
+	SetTimer(1, 1, 0);
 	static double alf = 90;
 	static int timer = 0;
 	static CPoint tchka(x - (12 / 2),y);
 	static int cygl = 0; // kof ygla
 
-	
-
-	///////////////////////////////////Шарик об платформу
-
 	DC.Rectangle(tchka.x + (timer - 1)*cos(3.14*alf / 180.0), tchka.y  + (timer - 1)*sin(3.14*alf / 180.0), tchka.x + 12 + (timer - 1)*cos(3.14*alf / 180.0), tchka.y +12+ (timer - 1)*sin(3.14*alf / 180.0));
-	if ((((tchka.x + timer*cos(3.14*alf / 180.0)) <= (crd.x + 68)) && ((tchka.x+12 + timer*cos(3.14*alf / 180.0)) >= crd.x)) && ((tchka.y + 12 + timer*sin(3.14*alf / 180.0)) >= crd.y) && ((tchka.y + timer*sin(3.14*alf / 180.0)) <= (crd.y + 7))){
+	
+	
+	switch (logicBall(tchka, timer, alf))
+	{
+	case 1:{
 		tchka.x = tchka.x + timer*cos(3.14*alf / 180.0);
 		tchka.y = tchka.y + timer*sin(3.14*alf / 180.0);
-		if (((crd.x + 34) - (x + timer*cos(3.14*alf / 180.0))) >= 0) alf = -1*ygl(double(abs((crd.x + 34) - (tchka.x + timer*cos(3.14*alf / 180.0)))), double(7.0)) - 90;
-		else alf = ygl(double(abs((crd.x + 34) - (tchka.x + timer*cos(3.14*alf / 180.0)))), double(7.0)) - 90;
+		if (((crd.x + 34) - (tchka.x)) >= 0){
+			alf = -1 * ygl(double(abs((crd.x + 34) - (tchka.x))), double(7.0)) - 90;
+		}
+		else alf = ygl(double(abs((crd.x + 34) - (tchka.x))), double(7.0)) - 90;
 		timer = 0;
-	}
+	}break;
 
-	//////////////////////////////////Шарик об правую стенку
-
-	if ((tchka.x + 12 + timer*cos(3.14*alf / 180.0)) >= (x * 2)){
+	case 2:{
 		tchka.x = tchka.x + timer*cos(3.14*alf / 180.0);
 		tchka.y = tchka.y + timer*sin(3.14*alf / 180.0);
 		alf *= -1;
 		alf -= 180;
 		timer = 0;
-	}
+	}break;
 
-	///////////////////////////////////Шарик об левую стенку
-
-	if ((tchka.x + timer*cos(3.14*alf / 180.0)) <= 0){
+	case 3:{
 		tchka.x = tchka.x + timer*cos(3.14*alf / 180.0);
 		tchka.y = tchka.y + timer*sin(3.14*alf / 180.0);
 		alf *= -1;
 		alf += 180;
 		timer = 0;
-	}
-
-	/////////////////////////////////////Шарик об потолок
-
-	if ((tchka.y + timer*sin(3.14*alf / 180.0)) <= 0){
+	}break;
+		
+	case 4:{
 		tchka.x = tchka.x + timer*cos(3.14*alf / 180.0);
 		tchka.y = tchka.y + timer*sin(3.14*alf / 180.0);
 		alf *= -1;
 		timer = 0;
-	}
+	}break;
 
+	default: break;
+	}
 	HELP = alf;
 	CDC* pDC = &DC;
 	CBitmap bmp;
@@ -252,7 +263,7 @@ void CarcanoidDlg::ball()
 	dc.CreateCompatibleDC(pDC);
 	dc.SelectObject(&bmp);
 	pDC->BitBlt(tchka.x + timer*cos(3.14*alf / 180.0), tchka.y + timer*sin(3.14*alf / 180.0), 12, 12, &dc, 0, 0, SRCCOPY);
-	timer+=1;
+	timer+=2;
 	
 
 }
@@ -261,12 +272,80 @@ double CarcanoidDlg::ygl(double a, double b)
 {
 	UpdateData(0);
 	double ygl = double(atan(a / b)*180.0/3.14);
-	//HELP = ygl;
 	return ygl;
 }
-
 
 void CarcanoidDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	ball();
+}
+
+void CarcanoidDlg::printEnemy()
+{
+	Enemy* print = new Enemy;
+	print = first;
+	CClientDC dc(this);
+	CBrush brush;
+	brush.CreateSolidBrush(RGB(255, 0, 0));
+	dc.SelectObject(brush);
+	for (int i = 0; i < countEnemy; i++)
+	{
+		dc.Rectangle(print->coord.x, print->coord.y, print->coord.x + dlinaEnemy, print->coord.y + shirinaEnemy);
+		print = print->next;
+	}
+	delete print;
+}
+
+int CarcanoidDlg::logicBall(CPoint tchka,int timer,double alf)
+{
+	CClientDC DC(this);
+	CRect rect;
+	GetClientRect(&rect);
+	Enemy* write = new Enemy;
+	write = first;
+	int x = rect.Width() / 2;
+	int y = rect.Height() / 2;
+	
+	if (((tchka.x + timer*cos(3.14*alf / 180.0)) <= (crd.x + 68)) &&
+		((tchka.x + 12 + timer*cos(3.14*alf / 180.0)) >= crd.x) &&
+		((tchka.y + 12 + timer*sin(3.14*alf / 180.0)) >= crd.y) &&
+		((tchka.y + timer*sin(3.14*alf / 180.0)) <= (crd.y + 7)))
+	{
+		return 1;
+	}
+
+	//////////////////////////////////Шарик об правую стенку
+
+	if ((tchka.x + 12 + timer*cos(3.14*alf / 180.0)) >= (x * 2)){
+		return 2;
+	}
+
+	///////////////////////////////////Шарик об левую стенку
+
+	if ((tchka.x + timer*cos(3.14*alf / 180.0)) <= 0){
+		return 3;
+	}
+
+	/////////////////////////////////////Шарик об потолок
+
+	if ((tchka.y + timer*sin(3.14*alf / 180.0)) <= 0){
+		return 4;
+	}
+
+	///////////////////////////////////Шарик об противника
+
+	for (int i = 0; i < countEnemy; i++)
+	{
+		if (
+			((tchka.x + timer*cos(3.14*alf / 180.0)) <= (write->coord.x + dlinaEnemy)) &&
+			((tchka.x + 12 + timer*cos(3.14*alf / 180.0)) >= write->coord.x) &&
+			((tchka.y + 12 + timer*sin(3.14*alf / 180.0)) >= write->coord.y) &&
+			((tchka.y + timer*sin(3.14*alf / 180.0)) <= (write->coord.y + shirinaEnemy))
+			){
+			return 4;
+		}
+		write = write->next;
+	}
+	
+	return 0;
 }
